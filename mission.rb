@@ -68,18 +68,11 @@ begin
 				else
 					bot.api.send_message(chat_id: message.chat.id, text: "很抱歉没有查到你想找的任务信息~要不要换个姿势呢?")
 				end
-		  when 'jiamin'
-        		bot.api.send_message(chat_id: message.chat.id, text: "整个艾泽拉斯都回响着你的名字，而我是多么幸运的一个家伙")
-		  when '/520'
-		  		bot.api.send_message(chat_id: message.chat.id, text: "520.today")
 		  when /\/love ./
 				#msg = message.text.sub(/\/h / , "").downcase.to_s
-				bot.api.send_message(chat_id: message.chat.id, text: "你是整个世界,Jiamin")
+				bot.api.send_message(chat_id: message.chat.id, text: "你是整个世界")
 		  when '/q@today520_bot'
 				bot.api.send_message(chat_id: message.chat.id, text: "查询任务格式为: /q 任务名\n（建议大家如果仅仅是搜索trello可以小窗bot，以免对群组成员造成垃圾信息骚扰）")
-		  when /\/v./
-		  		whom = message.text.sub(/\/v/ , "").downcase.to_s
-				bot.api.send_message(chat_id: message.chat.id, text: "票 #{whom}！ 就是他！票这个家伙！")
 	  end
 	rescue 
 		bot.api.send_message(chat_id: message.chat.id, text: "出错辣,豆腐丝已启动强大自我修复机制，一分钟后如果还自动修不好，再小窗豆腐丝哟") 

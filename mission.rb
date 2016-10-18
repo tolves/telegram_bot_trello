@@ -2,8 +2,8 @@
 require 'telegram/bot'
 require 'json'
 require 'uri'
-require 'json_save.rb'
-token = 'token'
+require '/opt/bot/json_save.rb'
+token = '149132564:AAGfWod2JwfYW1pbO7q9jciWSN1oEMN3nzg'
 incompleteLabels = ['5666779e19ad3a5dc26426a5','57287baf9148b133b928f6da','56d4fd5d152c3f92fd3a75c7','574c64565b9b3323fb39a5bd']
 
 begin
@@ -26,6 +26,8 @@ begin
 				json = JSON.parser.new(trello)
         		hash =  json.parse()
 				mission_title = Array.new
+				uniq_title = Array.new
+				mission_label =Array.new
 				cards_hash = hash['cards']
 				result =''
 				cover_url = ''
@@ -38,11 +40,17 @@ begin
 						mission_title.push(key)
 					end
 				}
+				
 				bot.api.send_message(chat_id: message.chat.id, text: "任务已找到,请稍候喔~") if !mission_title.empty?
 				if !mission_title.empty? && mission_title.length > 1
 					mission_title.each_with_index do |id,key|
-						result << "/q #{cards_hash[id]['name']}"
-						result << ((incompleteLabels+cards_hash[id]['idLabels']).uniq! == nil ? "\n" : " (incomplete)\n")
+						uniq_title.push([cards_hash[id]['name'],cards_hash[id]['idLabels']])
+					end
+					uniq_title = uniq_title.uniq{|item|item.first}
+					uniq_title.each_with_index do |value,id|
+						result << "/q #{value[0]}" if !value.nil?
+						#result << "#{id}\n"
+						result << ((incompleteLabels+value[1]).uniq! == nil ? "\n" : " (incomplete)\n")
 					end
 					bot.api.send_message(chat_id: message.chat.id, text: "喏,一共有这么多任务,你要看哪一个呢: \n#{result}")
 				elsif mission_title.length == 1
@@ -68,9 +76,13 @@ begin
 				else
 					bot.api.send_message(chat_id: message.chat.id, text: "很抱歉没有查到你想找的任务信息~要不要换个姿势呢?")
 				end
+		  when 'jiamin'
+        		bot.api.send_message(chat_id: message.chat.id, text: "整个艾泽拉斯都回响着你的名字，而我是多么幸运的一个家伙")
+		  when '/520'
+		  		bot.api.send_message(chat_id: message.chat.id, text: "520.today")
 		  when /\/love ./
 				#msg = message.text.sub(/\/h / , "").downcase.to_s
-				bot.api.send_message(chat_id: message.chat.id, text: "你是整个世界")
+				bot.api.send_message(chat_id: message.chat.id, text: "你是整个世界,Jiamin")
 		  when '/q@today520_bot'
 				bot.api.send_message(chat_id: message.chat.id, text: "查询任务格式为: /q 任务名\n（建议大家如果仅仅是搜索trello可以小窗bot，以免对群组成员造成垃圾信息骚扰）")
 	  end
@@ -85,10 +97,10 @@ begin
   end
   end
 rescue 
-	puts '又出错一次啦,人家先睡70s喔'		
+  puts '又出错一次啦,人家先睡70s喔'		
   sleep(70)
   retry  
-# When grouping by an association, Rails throws this exception if there's no result (bug)
+  #When grouping by an association, Rails throws this exception if there's no result (bug)
 end
 
 

@@ -2,7 +2,7 @@
 require 'telegram/bot'
 require 'json'
 require 'uri'
-require '/opt/bot/json_save.rb'
+require '/root/bot/json_save.rb'
 token = '149132564:AAGfWod2JwfYW1pbO7q9jciWSN1oEMN3nzg'
 incompleteLabels = ['5666779e19ad3a5dc26426a5','57287baf9148b133b928f6da','56d4fd5d152c3f92fd3a75c7','574c64565b9b3323fb39a5bd']
 
@@ -16,7 +16,7 @@ begin
 					when /\/q ./
 						s_mission_title = message.text.sub(/\/q / , "").downcase.to_s
 						next if s_mission_title == '[' || s_mission_title == ']'
-						trello = open('/opt/bot/ingress-medal-arts.json').read
+						trello = open('/root/bot/ingress-medal-arts.json').read
 						if trello.nil?
 							bot.api.send_message(chat_id: message.chat.id, text: "出错辣,豆腐丝快粗来化身水管道工人") 
 							next
@@ -54,11 +54,12 @@ begin
 							result << "任务名:#{cards_hash[mission_title[0]]['name']}"
 							result << ((incompleteLabels+cards_hash[mission_title[0]]['idLabels']).uniq! == nil ? "\n" : " (incomplete)\n")
 							result << "任务描述: #{cards_hash[mission_title[0]]['desc']} \n"
-							result << "trello链接: #{cards_hash[mission_title[0]]['shortUrl']}\n"
+							result << "trello链接: [点我点我](#{cards_hash[mission_title[0]]['shortUrl']})\n"
 
 							# if cards_hash[mission_title[0]]['name'].sub(/^\[.*\]/ , "")
 
-							result << "ingressmm: #{URI::escape("http://ingressmm.com/?find=#{cards_hash[mission_title[0]]['name'].sub(/^\[.*\]( |)/ , "")}")}\n"
+							result << "ingressmm: [点我点我](#{URI::escape("http://ingressmm.com/?find=#{cards_hash[mission_title[0]]['name'].sub(/^\[.*\]( |)/ , "")}")})\n"
+							result << "在[AQMH](http://imaq.cn/mh)中搜索:[点我点我](http://aqmh.azurewebsites.net/#q=#{URI::escape(cards_hash[mission_title[0]]['name'].sub(/^\[.*\]( |)/ , ""))})"
 							if cards_hash[mission_title[0]]['idAttachmentCover'] != nil
 								cards_hash[mission_title[0]]['attachments'].each do |attachment|
 									if attachment['id'] == cards_hash[mission_title[0]]['idAttachmentCover']
@@ -66,9 +67,9 @@ begin
 										break
 									end
 								end
-								bot.api.send_message(chat_id: message.chat.id, text: "已找到封面:#{cover_url}")
+								bot.api.send_photo(chat_id: message.chat.id,photo:cover_url,disable_notification:false)
 							end
-							bot.api.send_message(chat_id: message.chat.id, text: "#{result}" , disable_web_page_preview: "true")
+							bot.api.send_message(chat_id: message.chat.id, text: "#{result}" ,parse_mode:"Markdown", disable_web_page_preview: "true")
 						else
 							bot.api.send_message(chat_id: message.chat.id, text: "很抱歉没有查到你想找的任务信息~要不要换个姿势呢?")
 						end
@@ -83,7 +84,7 @@ begin
 						bot.api.send_message(chat_id: message.chat.id, text: "查询任务格式为: /q 任务名\n（建议大家如果仅仅是搜索trello可以小窗bot，以免对群组成员造成垃圾信息骚扰）")
 					end
 			rescue 
-				bot.api.send_message(chat_id: message.chat.id, text: "出错辣,豆腐丝已启动强大自我修复机制，一分钟后如果还自动修不好，再小窗豆腐丝哟") 
+				bot.api.send_message(chat_id: message.chat.id, text: "出错辣,豆腐丝已启动强大自我修复机制，一分钟后如果还自动修不好，再小窗豆腐丝 @tolves 哟") 
 				uri = URI('https://trello.com/b/LvwOjrYP/ingress-medal-arts.json')
 				save(uri)
 				sleep(70)

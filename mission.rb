@@ -2,7 +2,7 @@
 require 'telegram/bot'
 require 'json'
 require 'uri'
-require '/root/bot/json_save.rb'
+require 'json_save.rb'
 token = 'token'
 incompleteLabels = ['5666779e19ad3a5dc26426a5','57287baf9148b133b928f6da','56d4fd5d152c3f92fd3a75c7','574c64565b9b3323fb39a5bd']
 
@@ -75,13 +75,6 @@ begin
 						else
 							bot.api.send_message(chat_id: message.chat.id, text: "很抱歉没有查到你想找的任务信息~要不要换个姿势呢?")
 						end
-					when 'jiamin'
-						bot.api.send_message(chat_id: message.chat.id, text: "整个艾泽拉斯都回响着你的名字，而我是多么幸运的一个家伙")
-					when '/520'
-						bot.api.send_message(chat_id: message.chat.id, text: "520.today")
-					when /\/love ./
-						#msg = message.text.sub(/\/h / , "").downcase.to_s
-						bot.api.send_message(chat_id: message.chat.id, text: "你是整个世界,Jiamin")
 					when '/q@today520_bot'
 						bot.api.send_message(chat_id: message.chat.id, text: "查询任务格式为: /q 任务名\n（建议大家如果仅仅是搜索trello可以小窗bot，以免对群组成员造成垃圾信息骚扰）")
 					end

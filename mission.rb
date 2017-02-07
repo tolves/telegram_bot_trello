@@ -3,7 +3,7 @@ require 'telegram/bot'
 require 'json'
 require 'uri'
 require '/root/bot/json_save.rb'
-token = '149132564:AAGfWod2JwfYW1pbO7q9jciWSN1oEMN3nzg'
+token = 'token'
 incompleteLabels = ['5666779e19ad3a5dc26426a5','57287baf9148b133b928f6da','56d4fd5d152c3f92fd3a75c7','574c64565b9b3323fb39a5bd']
 
 begin
@@ -11,12 +11,14 @@ begin
 		bot.logger.info('Bot has been started')
 		bot.listen do |message|
 			begin
-				next if message.date < (Time.now - 60).to_i
+				next if message.date < (Time.now - 120).to_i
+#bot.api.send_message(chat_id:message.chat.id, text: Time.now)
+#bot.api.send_message(chat_id:message.chat.id, text: message.date)
 				case message.text
 					when /\/q ./
 						s_mission_title = message.text.sub(/\/q / , "").downcase.to_s
 						next if s_mission_title == '[' || s_mission_title == ']'
-						trello = open('/root/bot/ingress-medal-arts.json').read
+						trello = open('ingress-medal-arts.json').read
 						if trello.nil?
 							bot.api.send_message(chat_id: message.chat.id, text: "出错辣,豆腐丝快粗来化身水管道工人") 
 							next
@@ -84,7 +86,7 @@ begin
 						bot.api.send_message(chat_id: message.chat.id, text: "查询任务格式为: /q 任务名\n（建议大家如果仅仅是搜索trello可以小窗bot，以免对群组成员造成垃圾信息骚扰）")
 					end
 			rescue 
-				bot.api.send_message(chat_id: message.chat.id, text: "出错辣,豆腐丝已启动强大自我修复机制，一分钟后如果还自动修不好，再小窗豆腐丝 @tolves 哟") 
+				bot.api.send_message(chat_id: message.chat.id, text: "出错辣,豆腐丝已启动强大自我修复机制，一分钟后如果还自动修不好，先检查trello格式是否符合MarkDown规范，如果还不行，再小窗豆腐丝 @tolves 哟") 
 				uri = URI('https://trello.com/b/LvwOjrYP/ingress-medal-arts.json')
 				save(uri)
 				sleep(70)

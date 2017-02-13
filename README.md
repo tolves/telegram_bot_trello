@@ -4,14 +4,13 @@ Installation
 
 Add following line to your Gemfile:
 
-gem 'telegram-bot-ruby'
+  gem 'telegram-bot-ruby'
 And then execute:
 
-$ bundle
+  $ bundle
 Or install it system-wide:
 
-$ gem install telegram-bot-ruby
-
+  $ gem install telegram-bot-ruby
 
 a telegram bot about trello ingress mission arts board . base on ruby
 

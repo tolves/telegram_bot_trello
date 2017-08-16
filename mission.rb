@@ -2,97 +2,86 @@
 require 'telegram/bot'
 require 'json'
 require 'uri'
-require 'json_save.rb'
+require '/home/bot/json_save.rb'
 token = 'token'
-incompleteLabels = ['5666779e19ad3a5dc26426a5','57287baf9148b133b928f6da','56d4fd5d152c3f92fd3a75c7','574c64565b9b3323fb39a5bd']
-
+incompleteLabels = ['5666779e19ad3a5dc26426a5', '57287baf9148b133b928f6da', '56d4fd5d152c3f92fd3a75c7', '574c64565b9b3323fb39a5bd']
 begin
   Telegram::Bot::Client.run(token, logger: Logger.new($stderr)) do |bot|
-		bot.logger.info('Bot has been started')
-		bot.listen do |message|
-			begin
-				next if message.date < (Time.now - 120).to_i
-#bot.api.send_message(chat_id:message.chat.id, text: Time.now)
-#bot.api.send_message(chat_id:message.chat.id, text: message.date)
-				case message.text
-					when /\/q ./
-						s_mission_title = message.text.sub(/\/q / , "").downcase.to_s
-						next if s_mission_title == '[' || s_mission_title == ']'
-						trello = open('ingress-medal-arts.json').read
-						if trello.nil?
-							bot.api.send_message(chat_id: message.chat.id, text: "出错辣,豆腐丝快粗来化身水管道工人") 
-							next
-						end
-						json = JSON.parser.new(trello)
-						hash =  json.parse()
-						mission_title = Array.new
-						uniq_title = Array.new
-						cards_hash = hash['cards']
-						result =''
-						cover_url = ''
-						cards_hash.each_with_index { |value,key |
-							target_name = value['name'].downcase.to_s
-							if (target_name == s_mission_title) && (value['closed'] != true)
-								mission_title[0] = key
-								break
-							elsif (target_name.include?(s_mission_title)) && (value['closed'] != true)
-								mission_title.push(key)
-							end
-						}
+    bot.logger.info('Bot has been started')
+    bot.listen do |message|
+      case message
+        when Telegram::Bot::Types::InlineQuery
+          if message.query == '' || message.query.length < 2 || message.query.include?(' ')
+            next
+          end
+          title = message.query.downcase.to_s
+          trello = open('/home/bot/ingress-medal-arts.json').read
+          json = JSON.parser.new(trello)
+          hash = json.parse()
+          mission_title = Array.new
+          uniq_title = Array.new
+          cards_hash = hash['cards']
+          result =''
+          cover_url = ''
+          results = Array.new
+          cards_hash.each_with_index { |value, key|
+            target_name = value['name'].downcase.to_s
+            if (target_name.include?(title)) && (value['closed'] != true)
+              cover_url ||= ''
+              if value['idAttachmentCover'] != nil
+                value['attachments'].each do |attachment|
+                  if attachment['id'] == value['idAttachmentCover']
+                    cover_url = !attachment['previews'][4].nil? ? attachment['previews'][4]['url'] : attachment['url']
+                    break
+                  end
+                end
+              end
+              labal = Array.new
+              if value['idLabels'] != nil
+                value['labels'].each do |item|
+                  labal.push(item['name'])
+                end
+              end
+              name = value['name'].sub(/^\[.*\]( |)/, "")
+              results.push([name, value['desc'], value['shortUrl'], cover_url, labal])
+            end
+          }
+          final = Array.new
+          next if results.length < 1
+          results.each_with_index do |arr, index|
+            #这里有一个问题，telegram不允许发送过长的inline内容，如果允许显示内容过多，会导致413出错
+            break if index>3
 
-						bot.api.send_message(chat_id: message.chat.id, text: "任务已找到,请稍候喔~") if !mission_title.empty?
-						if !mission_title.empty? && mission_title.length > 1
-							mission_title.each_with_index do |id,key|
-								uniq_title.push([cards_hash[id]['name'],cards_hash[id]['idLabels']])
-							end
-							uniq_title = uniq_title.uniq{|item|item.first}
-							uniq_title.each_with_index do |value,id|
-								result << "/q #{value[0]}" if !value.nil?
-								#result << "#{id}\n"
-								result << ((incompleteLabels+value[1]).uniq! == nil ? "\n" : " (incomplete)\n")
-							end
-							bot.api.send_message(chat_id: message.chat.id, text: "喏,一共有这么多任务,你要看哪一个呢: \n#{result}")
-						elsif mission_title.length == 1
-							result << "任务名:#{cards_hash[mission_title[0]]['name']}"
-							result << ((incompleteLabels+cards_hash[mission_title[0]]['idLabels']).uniq! == nil ? "\n" : " (incomplete)\n")
-							result << "任务描述: #{cards_hash[mission_title[0]]['desc']} \n"
-							result << "trello链接: [点我点我](#{cards_hash[mission_title[0]]['shortUrl']})\n"
+            text = "[|](#{arr[3]}) | [#{arr[0]}](#{arr[2]}) \n"
+            text << "[ingressmm](#{URI::escape("http://ingressmm.com/?find=#{arr[0]}")})\t"
+            text << "[AQMH](http://aqmh.azurewebsites.net/#q=#{URI::escape(arr[0])})\t"
+            text << "[IngressMosaic](https://ingressmosaik.com/mosaic/#{URI::escape(arr[0])})\n"
+            #如果源中不符合md规范，很容易造成崩溃，干脆注释掉
+#          text << arr[1]
 
-							# if cards_hash[mission_title[0]]['name'].sub(/^\[.*\]/ , "")
+            content = Telegram::Bot::Types::InputTextMessageContent.new(
+                message_text: text,
+                parse_mode: "Markdown",
+                disable_web_page_preview: false
+            )
 
-							result << "ingressmm: [点我点我](#{URI::escape("http://ingressmm.com/?find=#{cards_hash[mission_title[0]]['name'].sub(/^\[.*\]( |)/ , "")}")})\n"
-							result << "在[AQMH](http://imaq.cn/mh)中搜索:[点我点我](http://aqmh.azurewebsites.net/#q=#{URI::escape(cards_hash[mission_title[0]]['name'].sub(/^\[.*\]( |)/ , ""))})"
-							if cards_hash[mission_title[0]]['idAttachmentCover'] != nil
-								cards_hash[mission_title[0]]['attachments'].each do |attachment|
-									if attachment['id'] == cards_hash[mission_title[0]]['idAttachmentCover']
-										cover_url =  !attachment['previews'][4].nil? ? attachment['previews'][4]['url'] : attachment['url']
-										break
-									end
-								end
-								bot.api.send_photo(chat_id: message.chat.id,photo:cover_url,disable_notification:false)
-							end
-							bot.api.send_message(chat_id: message.chat.id, text: "#{result}" ,parse_mode:"Markdown", disable_web_page_preview: "true")
-						else
-							bot.api.send_message(chat_id: message.chat.id, text: "很抱歉没有查到你想找的任务信息~要不要换个姿势呢?")
-						end
-					when '/q@today520_bot'
-						bot.api.send_message(chat_id: message.chat.id, text: "查询任务格式为: /q 任务名\n（建议大家如果仅仅是搜索trello可以小窗bot，以免对群组成员造成垃圾信息骚扰）")
-					end
-			rescue 
-				bot.api.send_message(chat_id: message.chat.id, text: "出错辣,豆腐丝已启动强大自我修复机制，一分钟后如果还自动修不好，先检查trello格式是否符合MarkDown规范，如果还不行，再小窗豆腐丝 @tolves 哟") 
-				uri = URI('https://trello.com/b/LvwOjrYP/ingress-medal-arts.json')
-				save(uri)
-				sleep(70)
-				retry
-			end
-		end
-	end
-rescue 
-  puts '又出错一次啦,人家先睡70s喔'		
-  sleep(70)
+            final.push(
+                Telegram::Bot::Types::InlineQueryResultArticle.new(
+                    id: index,
+                    title: arr[0],
+                    input_message_content: content,
+                    thumb_url: arr[3]=='' ? 'https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_120x44dp.png' : arr[3],
+                    hide_url: true,
+                    description: arr[4].map { |i| i+"\n" }.to_s
+                )
+            )
+          end
+          bot.api.answer_inline_query(inline_query_id: message.id, results: final)
+      end
+    end
+  end
+rescue
+  puts '又出错一次啦,人家先睡10s喔'
+  sleep(10)
   retry
 end
-
-
-
-
